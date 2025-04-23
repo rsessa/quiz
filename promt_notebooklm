@@ -1,0 +1,28 @@
+Tarea: Generar ~80 preguntas test (a,b,c,d) sobre Adm. Sistemas Operativos desde mis fuentes.
+
+
+Formato OBLIGATORIO por pregunta:
+[[QUESTION_START]]
+Question: [Texto]
+OptionA: [Texto]
+OptionB: [Texto]
+OptionC: [Texto]
+OptionD: [Texto]
+Correct: [Letra fuente]
+Justification: [Texto fuente]
+[[QUESTION_END]]
+
+
+Validación:
+
+
+Correct: = Solo según fuente.
+
+
+Compara Correct: con info pública.
+
+
+Si fuente != pública: Mantén Correct: fuente. Añade a Justification:: [Nota: Info pública sugiere [Respuesta de Internet].]
+
+
+Genera ~80. Formato estricto. Cada etiqueta en línea nueva.
