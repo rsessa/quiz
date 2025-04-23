@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargando...</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* --- Estilos CSS (UI Mejorada y Mobile-First) --- */
+        :root {
+            /* Paleta de colores (Ejemplo - puedes personalizarla) */
+            --primary-color: #4a90e2; /* Azul más suave */
+            --primary-hover: #357abd;
+            --success-color: #50e3c2; /* Verde menta */
+            --danger-color: #e95d5d;  /* Rojo suave */
+            --warning-color: #f5a623; /* Naranja */
+            --warning-hover: #d9901a;
+            --light-color: #f7f9fc;   /* Fondo casi blanco */
+            --dark-color: #4a4a4a;    /* Gris oscuro para texto */
+            --text-light: #ffffff;
+            --text-dark: #4a4a4a;
+            --text-muted: #6c757d;   /* Color para texto secundario/muted */
+            --border-color: #e1e4e8;
+            --card-bg: #ffffff;
+            --border-radius: 12px; /* Un poco menos redondeado */
+            --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            --flip-duration: 0.7s;
+            --transition-speed: 0.3s;
+        }
+
+        * { /* Reseteo básico */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+             height: 100%; /* Asegurar altura para flex */
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            flex-direction: column; /* Permitir que el footer vaya abajo */
+            align-items: center;
+            justify-content: flex-start; /* Alinear contenido principal arriba */
+            min-height: 100%; /* Ocupar toda la altura */
+            background: linear-gradient(180deg, var(--light-color) 0%, #eef2f7 100%); /* Degradado sutil */
+            color: var(--text-dark);
+            padding: 15px; /* Padding base para móvil */
+            padding-bottom: 100px; /* Añadir padding inferior para dejar espacio al footer fijo */
+        }
+
+        /* Contenedor principal para empujar el footer */
+        .main-content {
+            width: 100%;
+            max-width: 650px; /* Ancho máximo consistente */
+            flex-grow: 1; /* Ocupa el espacio disponible */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+
+        h1 {
+            color: var(--dark-color);
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.6rem; /* Tamaño base móvil */
+            font-weight: 600;
+            width: 100%; /* Ocupar ancho */
+        }
+
+        /* --- Barra de Progreso --- */
+        #progress-container {
+            width: 100%;
+            /* max-width: 650px; */ /* Ya está limitado por main-content */
+            background-color: #e9ecef;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            height: 10px; /* Más delgada */
+            margin-bottom: 25px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0%; /* Inicia en 0 */
+            background-color: var(--success-color);
+            border-radius: var(--border-radius);
+            transition: width var(--transition-speed) ease-out;
+        }
+
+        /* --- Contenedor Principal --- */
+        #quiz-container {
+            perspective: 1200px;
+            width: 100%;
+            /* max-width: 650px; */ /* Limitado por main-content */
+            margin-bottom: 25px;
+            opacity: 1;
+            transition: opacity var(--transition-speed) ease-in-out;
+        }
+        #quiz-container.fade-out {
+            opacity: 0;
+        }
+
+        #quiz-card {
+            width: 100%;
+            min-height: 320px; /* Altura mínima base */
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform var(--flip-duration) cubic-bezier(.68,-.6,.27,1.6), height var(--transition-speed) ease-out;
+            box-shadow: var(--card-shadow);
+            border-radius: var(--border-radius);
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color); /* Borde sutil */
+        }
+
+        .card-face {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            backface-visibility: hidden;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 20px; box-sizing: border-box; border-radius: var(--border-radius);
+            text-align: center; overflow: hidden;
+        }
+        #card-front { color: var(--text-dark); z-index: 2; justify-content: space-between; }
+        #card-back { background-color: var(--card-bg); color: var(--text-light); transform: rotateY(180deg); z-index: 1; font-size: 1rem; justify-content: center; border: 1px solid transparent; }
+        #quiz-card.correcta #card-back { background-color: var(--success-color); border-color: var(--success-color); }
+        #quiz-card.incorrecta #card-back { background-color: var(--danger-color); border-color: var(--danger-color); }
+        #quiz-card.flipped { transform: rotateY(180deg); }
+
+        #pregunta-info { width: 100%; display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 15px; font-size: 0.85rem; color: var(--text-muted); flex-shrink: 0; }
+        #numero-pregunta { font-weight: 600; }
+        #intentos-pregunta { font-style: italic; }
+
+        #texto-pregunta { font-size: 1.1rem; margin-bottom: 20px; width: 100%; overflow-y: visible; text-align: left; line-height: 1.6; flex-grow: 1; font-weight: 400; }
+
+        #opciones { display: grid; grid-template-columns: 1fr; gap: 10px; width: 100%; margin-top: 15px; flex-shrink: 0; }
+        .opcion-btn { padding: 12px 15px; font-size: 0.95rem; font-family: inherit; background-color: var(--primary-color); color: var(--text-light); border: none; border-radius: 8px; cursor: pointer; transition: background-color var(--transition-speed) ease, transform 0.1s ease, box-shadow 0.2s ease; width: 100%; box-sizing: border-box; text-align: left; line-height: 1.5; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .opcion-btn:hover:not(:disabled) { background-color: var(--primary-hover); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .opcion-btn:active:not(:disabled) { transform: scale(0.98); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .opcion-btn.selected { outline: 2px solid var(--primary-hover); outline-offset: 2px; }
+        .opcion-btn:disabled { background-color: #cccccc; cursor: not-allowed; opacity: 0.7; box-shadow: none; }
+
+        #resultado-icono { font-size: 4.5em; font-weight: 600; line-height: 1; margin-bottom: 15px; flex-shrink: 0; animation: popIn 0.5s ease-out forwards; }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+
+        #justificacion { font-size: 0.9rem; padding: 12px; background-color: rgba(0, 0, 0, 0.1); border-radius: 5px; width: 95%; box-sizing: border-box; margin-top: 10px; text-align: left; line-height: 1.5; flex-grow: 1; overflow-y: visible; color: var(--text-light); }
+        #quiz-card.correcta #justificacion, #quiz-card.incorrecta #justificacion { color: var(--text-light); background-color: rgba(0, 0, 0, 0.2); }
+
+        #boton-siguiente, #boton-finalizar, #boton-revisar { padding: 12px 30px; font-size: 1rem; font-family: inherit; font-weight: 600; background-color: var(--warning-color); color: var(--text-dark); border: none; border-radius: 8px; cursor: pointer; transition: background-color var(--transition-speed) ease, transform 0.1s ease, box-shadow 0.2s ease; margin-top: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: none; }
+        #boton-siguiente:hover, #boton-finalizar:hover, #boton-revisar:hover { background-color: var(--warning-hover); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+        #boton-siguiente:active, #boton-finalizar:active, #boton-revisar:active { transform: scale(0.98); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+        #resumen-final { margin-top: 30px; padding: 20px; background-color: var(--card-bg); border-radius: var(--border-radius); box-shadow: var(--card-shadow); border: 1px solid var(--border-color); text-align: center; max-width: 650px; width: 100%; display: none; }
+        #resumen-final h2 { color: var(--primary-color); margin-bottom: 20px; font-size: 1.4rem; }
+        #resumen-final p { font-size: 1rem; margin-bottom: 12px; line-height: 1.6; }
+        #resumen-final p strong { font-weight: 600; color: var(--primary-color); }
+        #clasificacion { font-style: italic; color: var(--text-muted); }
+        #boton-revisar { margin-top: 15px; background-color: var(--primary-color); color: var(--text-light); }
+        #boton-revisar:hover { background-color: var(--primary-hover); }
+
+        /* --- NUEVO: Estilos para Nota y Footer --- */
+        #total-preguntas-nota {
+            width: 100%;
+            max-width: 650px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 30px; /* Espacio sobre la nota */
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.5); /* Fondo semitransparente */
+            border-radius: 8px;
+        }
+
+        footer {
+            width: 100%;
+            text-align: center;
+            padding: 15px;
+            margin-top: 20px; /* Espacio sobre el footer */
+            font-size: 0.8rem; /* Texto pequeño */
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color); /* Línea separadora */
+            background-color: var(--light-color); /* Fondo consistente */
+
+            /* Posicionamiento Fijo Opcional (descomentar si se prefiere) */
+            /*
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            background-color: #ffffff;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 10;
+            */
+        }
+
+        footer p {
+            margin-bottom: 5px; /* Espacio entre líneas del footer */
+        }
+
+        footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        footer a:hover {
+            text-decoration: underline;
+            color: var(--primary-hover);
+        }
+
+        /* --- Media Queries (Mobile-First) --- */
+        @media (min-width: 600px) {
+            body { padding-bottom: 80px; /* Más espacio si el footer es fijo */ }
+            h1 { font-size: 2rem; margin-bottom: 30px;}
+            #progress-container { height: 12px; margin-bottom: 30px;}
+            .card-face { padding: 30px; }
+            #pregunta-info { font-size: 0.9rem; }
+            #texto-pregunta { font-size: 1.25rem; }
+            .opcion-btn { padding: 14px 18px; font-size: 1rem; }
+            #resultado-icono { font-size: 5.5em; }
+            #justificacion { font-size: 1rem; padding: 15px; }
+            #boton-siguiente, #boton-finalizar, #boton-revisar { padding: 14px 35px; font-size: 1.1rem; }
+            #resumen-final { padding: 30px; }
+            #resumen-final h2 { font-size: 1.6rem; }
+            #resumen-final p { font-size: 1.1rem; }
+            #total-preguntas-nota { font-size: 0.9rem; margin-top: 40px; }
+            footer { font-size: 0.85rem; padding: 20px; }
+        }
+        @media (min-width: 992px) {
+            h1 { font-size: 2.2rem; margin-bottom: 40px; }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <h1 id="quiz-title"></h1>
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+        <div id="quiz-container">
+            <div id="quiz-card">
+                <div class="card-face" id="card-front">
+                    <div id="pregunta-info">
+                        <span id="numero-pregunta">Pregunta X / Y</span>
+                        <span id="intentos-pregunta">Intentos: 0</span>
+                    </div>
+                    <p id="texto-pregunta">Cargando pregunta...</p>
+                    <div id="opciones"></div>
+                </div>
+                <div class="card-face" id="card-back">
+                    <div id="resultado-icono"></div>
+                    <p id="justificacion" style="display: none;"></p>
+                </div>
+            </div>
+        </div>
+        <button id="boton-siguiente">Siguiente Pregunta</button>
+        <button id="boton-finalizar">Ver Resultados</button>
+        <div id="resumen-final">
+            <h2>Resultados del Cuestionario</h2>
+            <p id="total-correctas">Respuestas Correctas: <strong>0 / 0</strong></p>
+            <p id="porcentaje-correctas">Porcentaje: <strong>0%</strong></p>
+            <p id="total-intentos">Intentos Totales: <strong>0</strong></p>
+            <p id="clasificacion">Clasificación: Calculando...</p>
+            <button id="boton-revisar">Revisar Respuestas</button>
+        </div>
+    </div> <div id="total-preguntas-nota">Cargando información de preguntas...</div>
+
+    <footer>
+        <p>Richard Sessa Alcaraz | <a href="https://github.com/rsessa" target="_blank" rel="noopener noreferrer">GitHub</a> | Hecho con ❤️ con ViveCoding | Copyleft 🄯 2024</p>
+
+    <script src="datos_quiz.js"></script>
+
+    <script>
+        // --- Variables Globales ---
+        let preguntaActualIndex = 0;
+        let intentosPorPregunta = {};
+        let respuestasCorrectas = 0;
+        let tarjetaVolteada = false;
+        let preguntaRespondidaCorrectamente = false;
+        const quizDataExists = typeof quizData !== 'undefined' && Array.isArray(quizData);
+        const quizTitleExists = typeof quizTitle !== 'undefined';
+        let preguntasDelQuiz = [];
+        let totalPreguntas = 0;
+        let userAnswers = [];
+
+        // Elementos del DOM
+        let quizTitleEl, contenedorQuiz, tarjeta, caraFrontal, caraTrasera,
+            numeroPreguntaEl, intentosPreguntaEl, textoPreguntaEl, opcionesEl,
+            resultadoIconoEl, justificacionEl, botonSiguiente, botonFinalizar,
+            resumenFinalEl, totalCorrectasEl, totalIntentosEl, clasificacionEl,
+            progressBar, progressContainer, porcentajeCorrectasEl, botonRevisar,
+            totalPreguntasNotaEl; // *** NUEVO: Para la nota del total ***
+
+        // --- Funciones ---
+        function shuffleArray(array) { /* ... (sin cambios) ... */
+            for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array;
+        }
+        function ajustarAlturaTarjeta(esCaraTrasera = false) { /* ... (sin cambios) ... */
+             requestAnimationFrame(() => { const caraVisible = esCaraTrasera ? caraTrasera : caraFrontal; const caraOculta = esCaraTrasera ? caraFrontal : caraTrasera; caraFrontal.style.display = 'flex'; caraTrasera.style.display = 'flex'; caraOculta.style.visibility = 'hidden'; const paddingVertical = parseInt(getComputedStyle(caraVisible).paddingTop) + parseInt(getComputedStyle(caraVisible).paddingBottom); const alturaContenido = caraVisible.scrollHeight; const alturaMinima = parseInt(getComputedStyle(tarjeta).minHeight); tarjeta.style.height = `${Math.max(alturaContenido, alturaMinima)}px`; caraOculta.style.visibility = 'visible'; if (!tarjeta.classList.contains('flipped')) { } });
+        }
+        function actualizarProgreso() { /* ... (sin cambios) ... */
+            const porcentaje = totalPreguntas > 0 ? ((preguntaActualIndex) / totalPreguntas) * 100 : 0; progressBar.style.width = `${porcentaje}%`;
+        }
+        function mostrarPregunta() { /* ... (sin cambios, usa totalPreguntas procesado) ... */
+            contenedorQuiz.classList.add('fade-out');
+            setTimeout(() => {
+                tarjetaVolteada = false; preguntaRespondidaCorrectamente = false;
+                tarjeta.classList.remove('flipped', 'correcta', 'incorrecta');
+                botonSiguiente.style.display = 'none'; botonFinalizar.style.display = 'none';
+                tarjeta.style.height = getComputedStyle(tarjeta).minHeight;
+                if (preguntaActualIndex >= totalPreguntas) { mostrarResumenFinal(); contenedorQuiz.classList.remove('fade-out'); return; }
+                actualizarProgreso();
+                const preguntaData = preguntasDelQuiz[preguntaActualIndex];
+                if (intentosPorPregunta[preguntaActualIndex] === undefined) { intentosPorPregunta[preguntaActualIndex] = 0; }
+                numeroPreguntaEl.textContent = `Pregunta ${preguntaActualIndex + 1} / ${totalPreguntas}`;
+                intentosPreguntaEl.textContent = `Intentos: ${intentosPorPregunta[preguntaActualIndex]}`;
+                textoPreguntaEl.textContent = preguntaData.pregunta;
+                opcionesEl.innerHTML = '';
+                for (const [key, value] of Object.entries(preguntaData.opciones)) { const botonOpcion = document.createElement('button'); botonOpcion.classList.add('opcion-btn'); botonOpcion.textContent = `${key.toUpperCase()}) ${value}`; botonOpcion.dataset.opcion = key; botonOpcion.addEventListener('click', manejarRespuesta); opcionesEl.appendChild(botonOpcion); }
+                justificacionEl.textContent = preguntaData.justificacion;
+                justificacionEl.style.display = 'none'; resultadoIconoEl.textContent = '';
+                ajustarAlturaTarjeta(false);
+                requestAnimationFrame(() => { contenedorQuiz.classList.remove('fade-out'); });
+            }, parseFloat(getComputedStyle(contenedorQuiz).transitionDuration) * 1000);
+        }
+        function manejarRespuesta(event) { /* ... (sin cambios) ... */
+            if (tarjetaVolteada) return;
+            const opcionSeleccionada = event.target.dataset.opcion; const preguntaData = preguntasDelQuiz[preguntaActualIndex];
+            opcionesEl.querySelectorAll('.opcion-btn.selected').forEach(btn => btn.classList.remove('selected')); event.target.classList.add('selected');
+            if (userAnswers[preguntaActualIndex] === undefined) { userAnswers[preguntaActualIndex] = opcionSeleccionada; }
+            if (!preguntaRespondidaCorrectamente) { intentosPorPregunta[preguntaActualIndex]++; intentosPreguntaEl.textContent = `Intentos: ${intentosPorPregunta[preguntaActualIndex]}`; }
+            tarjetaVolteada = true;
+            const botones = opcionesEl.querySelectorAll('.opcion-btn'); botones.forEach(btn => btn.disabled = true);
+            setTimeout(() => {
+                if (opcionSeleccionada === preguntaData.correcta) {
+                    if (!preguntaRespondidaCorrectamente) { respuestasCorrectas++; }
+                    preguntaRespondidaCorrectamente = true; tarjeta.classList.add('correcta'); resultadoIconoEl.textContent = '✓'; justificacionEl.style.display = 'block';
+                    ajustarAlturaTarjeta(true); tarjeta.classList.add('flipped');
+                    progressBar.style.width = `${((preguntaActualIndex + 1) / totalPreguntas) * 100}%`;
+                    if (preguntaActualIndex < totalPreguntas - 1) { botonSiguiente.style.display = 'inline-block'; } else { botonFinalizar.style.display = 'inline-block'; }
+                } else {
+                    tarjeta.classList.add('incorrecta'); resultadoIconoEl.textContent = 'X'; justificacionEl.style.display = 'none';
+                    ajustarAlturaTarjeta(true); tarjeta.classList.add('flipped');
+                    setTimeout(() => { tarjeta.classList.remove('flipped', 'incorrecta'); tarjetaVolteada = false; botones.forEach(btn => { btn.disabled = false; btn.classList.remove('selected'); }); ajustarAlturaTarjeta(false); }, 2000);
+                }
+            }, 200);
+        }
+        function irASiguientePregunta() { /* ... (sin cambios) ... */
+            preguntaActualIndex++; mostrarPregunta();
+        }
+        function mostrarResumenFinal() { /* ... (sin cambios en lógica, usa totalPreguntas procesado) ... */
+            progressContainer.style.display = 'none'; contenedorQuiz.style.display = 'none'; botonSiguiente.style.display = 'none'; botonFinalizar.style.display = 'none';
+            let intentosTotales = 0; for (const index in intentosPorPregunta) { if (index < totalPreguntas) { intentosTotales += intentosPorPregunta[index]; } }
+            const porcentaje = totalPreguntas > 0 ? ((respuestasCorrectas / totalPreguntas) * 100).toFixed(1) : 0;
+            totalCorrectasEl.innerHTML = `Respuestas Correctas: <strong>${respuestasCorrectas} / ${totalPreguntas}</strong>`;
+            porcentajeCorrectasEl.innerHTML = `Porcentaje: <strong>${porcentaje}%</strong>`;
+            totalIntentosEl.innerHTML = `Intentos Totales: <strong>${intentosTotales}</strong>`;
+            const porcentajeCorrectasNum = parseFloat(porcentaje); let clasificacionTexto = "Necesitas repasar más."; if (porcentajeCorrectasNum >= 90) { clasificacionTexto = "¡Excelente!"; } else if (porcentajeCorrectasNum >= 75) { clasificacionTexto = "¡Muy bien!"; } else if (porcentajeCorrectasNum >= 50) { clasificacionTexto = "Aprobado."; } const intentosPromedio = totalPreguntas > 0 ? intentosTotales / totalPreguntas : 0; if (intentosPromedio > 2 && porcentajeCorrectasNum >= 50) { clasificacionTexto += " (¡Pero con muchos intentos!)"; } else if (intentosPromedio > 1.5 && porcentajeCorrectasNum >= 75) { clasificacionTexto += " (¡Puedes mejorar la eficiencia!)"; } clasificacionEl.textContent = `Clasificación: ${clasificacionTexto}`;
+            botonRevisar.style.display = 'inline-block'; resumenFinalEl.style.display = 'block';
+        }
+        function iniciarRevision() { /* ... (sin cambios) ... */
+             alert("La función de revisar respuestas aún no está implementada.");
+        }
+
+        // --- Inicialización al Cargar el DOM ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Obtener referencias a los elementos del DOM
+            quizTitleEl = document.getElementById('quiz-title');
+            contenedorQuiz = document.getElementById('quiz-container');
+            tarjeta = document.getElementById('quiz-card');
+            caraFrontal = document.getElementById('card-front');
+            caraTrasera = document.getElementById('card-back');
+            numeroPreguntaEl = document.getElementById('numero-pregunta');
+            intentosPreguntaEl = document.getElementById('intentos-pregunta');
+            textoPreguntaEl = document.getElementById('texto-pregunta');
+            opcionesEl = document.getElementById('opciones');
+            resultadoIconoEl = document.getElementById('resultado-icono');
+            justificacionEl = document.getElementById('justificacion');
+            botonSiguiente = document.getElementById('boton-siguiente');
+            botonFinalizar = document.getElementById('boton-finalizar');
+            resumenFinalEl = document.getElementById('resumen-final');
+            totalCorrectasEl = document.getElementById('total-correctas');
+            totalIntentosEl = document.getElementById('total-intentos');
+            clasificacionEl = document.getElementById('clasificacion');
+            progressBar = document.getElementById('progress-bar');
+            progressContainer = document.getElementById('progress-container');
+            porcentajeCorrectasEl = document.getElementById('porcentaje-correctas');
+            botonRevisar = document.getElementById('boton-revisar');
+            totalPreguntasNotaEl = document.getElementById('total-preguntas-nota'); // *** NUEVO ***
+
+            // Añadir listeners a los botones
+            botonSiguiente.addEventListener('click', irASiguientePregunta);
+            botonFinalizar.addEventListener('click', mostrarResumenFinal);
+            botonRevisar.addEventListener('click', iniciarRevision);
+
+            // Establecer títulos y procesar datos
+            let errorMessage = '';
+            let originalTotal = 0; // *** NUEVO: Para guardar el total original ***
+
+            if (quizTitleExists) { document.title = quizTitle; quizTitleEl.textContent = quizTitle; }
+            else { errorMessage = "Error: 'quizTitle' no definido."; quizTitleEl.textContent = "Error"; }
+
+            if (!quizDataExists) { errorMessage += " Error: 'quizData' no definido."; }
+            else {
+                originalTotal = quizData.length; // *** Guardar total original ANTES de procesar ***
+                if (originalTotal === 0) { errorMessage += " Error: 'quizData' vacío."; }
+            }
+
+            // Mostrar nota con el total original si los datos existen
+            if (quizDataExists) {
+                totalPreguntasNotaEl.textContent = `Total de preguntas en la base de datos: ${originalTotal}`;
+            } else {
+                totalPreguntasNotaEl.textContent = 'No se pudieron cargar los datos de las preguntas.';
+                totalPreguntasNotaEl.style.color = 'var(--danger-color)';
+            }
+
+
+            // Procesar preguntas solo si los datos existen y no hay error de título
+            if (quizDataExists && errorMessage === '') {
+                 let dataToUse = [...quizData];
+                 shuffleArray(dataToUse);
+                 preguntasDelQuiz = dataToUse.length > 20 ? dataToUse.slice(0, 20) : dataToUse;
+                 totalPreguntas = preguntasDelQuiz.length;
+                 userAnswers = new Array(totalPreguntas);
+            }
+
+            // Iniciar o mostrar error
+            if (errorMessage === '' && totalPreguntas > 0) {
+                 progressContainer.style.display = 'block';
+                 contenedorQuiz.style.display = 'block';
+                 mostrarPregunta();
+            } else {
+                 quizTitleEl.textContent = "Error al cargar";
+                 const errorDiv = document.createElement('div');
+                 errorDiv.textContent = errorMessage || "Error desconocido.";
+                 errorDiv.style.color = "red"; errorDiv.style.marginTop = "20px";
+                 // Insertar error antes del contenedor principal si existe, o al final del body
+                 const mainContent = document.querySelector('.main-content');
+                 if(mainContent) {
+                     document.body.insertBefore(errorDiv, mainContent);
+                 } else {
+                      document.body.appendChild(errorDiv);
+                 }
+
+                 contenedorQuiz.style.display = 'none';
+                 progressContainer.style.display = 'none';
+                 totalPreguntasNotaEl.style.display = 'none'; // Ocultar nota si hay error
+            }
+        });
+    </script>
+</body>
+</html>
